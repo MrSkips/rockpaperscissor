@@ -1,76 +1,130 @@
-import sys
-import datetime
 import requests
+from PyQt5.QtGui import QImage, QPalette, QBrush
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
-from PyQt5.QtGui import QFont, QPixmap, QPalette, QColor
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import QTimer, Qt
+from newsapi import NewsApiClient
+
+# Set up News API client
+news_api = NewsApiClient(api_key='be3eab53efa44749943bb924a49fca24')
 
 class NewsDisplayWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("News Display")
 
-        # Set the background to an image of the aurora borealis
+        # Set window properties
+        self.setWindowTitle("News Display")
+        self.setGeometry(0, 0, 800, 480)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        # Set up label for displaying news headline and image
+        self.news_label = QLabel(self)
+        self.news_label.setGeometry(0, 0, 800, 480)
+        self.news_label.setAlignment(Qt.AlignCenter)
+        self.news_label.setStyleSheet("QLabel { color : white; font-size: 36px; }")
+
+        # Set up timer for updating news every 15 seconds
+        self.news_timer = QTimer()
+        self.news_timer.timeout.connect(self.update_news)
+        self.news_timer.start(15000)
+
+        # Initialize news headline and image
+        self.news_headline = ''
+        self.news_image_url = ''
+
+        # Update news display
+        self.update_news()
+
+    def update_news(self):
+        # Get top headlines from News API
+        top_headlines = news_api.get_top_headlines(language='en', country='us')
+
+        # Select first headline and extract headline text and image URL
+        article = top_headlines['articles'][0]
+        self.news_headline = article['title']
+        self.news_image_url = article['urlToImage']
+
+        # Download image and set as window background
+        image_data = requests.get(self.news_image_url).content
+        image = QImage.fromData(image_data)
         palette = QPalette()
-        image = QPixmap("aurora.jpg")
         palette.setBrush(QPalette.Background, QBrush(image))
         self.setPalette(palette)
 
-        # Resize the window to fit the screen
-        screen_rect = QApplication.desktop().screenGeometry()
-        self.setGeometry(screen_rect)
-
-        # Create a label for the date and time
-        self.datetime_label = QLabel(self)
-        self.datetime_label.setAlignment(Qt.AlignCenter)
-        self.datetime_label.setFont(QFont('Arial', 24))
-        self.datetime_label.setStyleSheet('color: white')
-
-        # Create a label for the news headline
-        self.news_label = QLabel(self)
-        self.news_label.setAlignment(Qt.AlignCenter)
-        self.news_label.setFont(QFont('Arial', 18))
-        self.news_label.setWordWrap(True)
-        self.news_label.setStyleSheet('color: white')
-
-        # Create a timer to update the date, time, and news headline every 15 seconds
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_display)
-        self.timer.start(15000)
-
-        self.update_display()
-
-    def update_display(self):
-        # Retrieve the current date and time
-        now = datetime.datetime.now()
-        date_string = now.strftime("%B %d, %Y")
-        time_string = now.strftime("%I:%M %p")
-        self.datetime_label.setText(f"{date_string}\n{time_string}")
-
-        # Retrieve the latest news headline from NewsAPI
-        url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=be3eab53efa44749943bb924a49fca24'
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            articles = data['articles']
-            if len(articles) > 0:
-                headline = articles[self.timer.remainingTime() // 15000 % len(articles)]['title']
-                self.news_label.setText(headline)
-
-    def resizeEvent(self, event):
-        # Resize the labels when the window size changes
-        width = event.size().width()
-        height = event.size().height()
-        self.datetime_label.setGeometry(0, 0, width, height/2)
-        self.news_label.setGeometry(0, height/2, width, height/2)
+        # Update news label with headline text
+        self.news_label.setText(self.news_headline)
 
     def keyPressEvent(self, event):
-        # Close the application when the 'q' key is pressed
+        # Close window when 'q' is pressed
         if event.key() == Qt.Key_Q:
             self.close()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication([])
     window = NewsDisplayWindow()
     window.showFullScreen()
-    sys.exit(app.exec_())
+    app.exec_()
+import requests
+from PyQt5.QtGui import QImage, QPalette, QBrush
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
+from PyQt5.QtCore import QTimer, Qt
+from newsapi import NewsApiClient
+
+# Set up News API client
+news_api = NewsApiClient(api_key='be3eab53efa44749943bb924a49fca24')
+
+class NewsDisplayWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Set window properties
+        self.setWindowTitle("News Display")
+        self.setGeometry(0, 0, 800, 480)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        # Set up label for displaying news headline and image
+        self.news_label = QLabel(self)
+        self.news_label.setGeometry(0, 0, 800, 480)
+        self.news_label.setAlignment(Qt.AlignCenter)
+        self.news_label.setStyleSheet("QLabel { color : white; font-size: 36px; }")
+
+        # Set up timer for updating news every 15 seconds
+        self.news_timer = QTimer()
+        self.news_timer.timeout.connect(self.update_news)
+        self.news_timer.start(15000)
+
+        # Initialize news headline and image
+        self.news_headline = ''
+        self.news_image_url = ''
+
+        # Update news display
+        self.update_news()
+
+    def update_news(self):
+        # Get top headlines from News API
+        top_headlines = news_api.get_top_headlines(language='en', country='us')
+
+        # Select first headline and extract headline text and image URL
+        article = top_headlines['articles'][0]
+        self.news_headline = article['title']
+        self.news_image_url = article['urlToImage']
+
+        # Download image and set as window background
+        image_data = requests.get(self.news_image_url).content
+        image = QImage.fromData(image_data)
+        palette = QPalette()
+        palette.setBrush(QPalette.Background, QBrush(image))
+        self.setPalette(palette)
+
+        # Update news label with headline text
+        self.news_label.setText(self.news_headline)
+
+    def keyPressEvent(self, event):
+        # Close window when 'q' is pressed
+        if event.key() == Qt.Key_Q:
+            self.close()
+
+if __name__ == "__main__":
+    app = QApplication([])
+    window = NewsDisplayWindow()
+    window.showFullScreen()
+    app.exec_()
