@@ -37,7 +37,7 @@ class NewsDisplayWindow(QMainWindow):
         self.datetime_label.setText(f"{date_string}\n{time_string}")
 
         # Retrieve the latest news headline from NewsAPI
-        url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=YOUR_API_KEY_HERE'
+        url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=be3eab53efa44749943bb924a49fca24'
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
