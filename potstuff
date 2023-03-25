@@ -1,0 +1,60 @@
+import sys
+import datetime
+import requests
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
+from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtCore import Qt, QTimer
+
+class NewsDisplayWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("News Display")
+        self.setGeometry(100, 100, 800, 600)
+
+        # Create a label for the date and time
+        self.datetime_label = QLabel(self)
+        self.datetime_label.setAlignment(Qt.AlignCenter)
+        self.datetime_label.setFont(QFont('Arial', 24))
+
+        # Create a label for the news headline
+        self.news_label = QLabel(self)
+        self.news_label.setAlignment(Qt.AlignCenter)
+        self.news_label.setFont(QFont('Arial', 18))
+        self.news_label.setWordWrap(True)
+
+        # Create a timer to update the date, time, and news headline every minute
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_display)
+        self.timer.start(60000)
+
+        self.update_display()
+
+    def update_display(self):
+        # Retrieve the current date and time
+        now = datetime.datetime.now()
+        date_string = now.strftime("%B %d, %Y")
+        time_string = now.strftime("%I:%M %p")
+        self.datetime_label.setText(f"{date_string}\n{time_string}")
+
+        # Retrieve the latest news headline from NewsAPI
+        url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=YOUR_API_KEY_HERE'
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            articles = data['articles']
+            if len(articles) > 0:
+                headline = articles[0]['title']
+                self.news_label.setText(headline)
+
+    def resizeEvent(self, event):
+        # Resize the labels when the window size changes
+        width = event.size().width()
+        height = event.size().height()
+        self.datetime_label.setGeometry(0, 0, width, height/2)
+        self.news_label.setGeometry(0, height/2, width, height/2)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = NewsDisplayWindow()
+    window.show()
+    sys.exit(app.exec_())
