@@ -2,30 +2,41 @@ import sys
 import datetime
 import requests
 from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QFont, QPixmap, QPalette, QColor
 from PyQt5.QtCore import Qt, QTimer
 
 class NewsDisplayWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("News Display")
-        self.setGeometry(100, 100, 800, 600)
+
+        # Set the background to an image of the aurora borealis
+        palette = QPalette()
+        image = QPixmap("aurora.jpg")
+        palette.setBrush(QPalette.Background, QBrush(image))
+        self.setPalette(palette)
+
+        # Resize the window to fit the screen
+        screen_rect = QApplication.desktop().screenGeometry()
+        self.setGeometry(screen_rect)
 
         # Create a label for the date and time
         self.datetime_label = QLabel(self)
         self.datetime_label.setAlignment(Qt.AlignCenter)
         self.datetime_label.setFont(QFont('Arial', 24))
+        self.datetime_label.setStyleSheet('color: white')
 
         # Create a label for the news headline
         self.news_label = QLabel(self)
         self.news_label.setAlignment(Qt.AlignCenter)
         self.news_label.setFont(QFont('Arial', 18))
         self.news_label.setWordWrap(True)
+        self.news_label.setStyleSheet('color: white')
 
-        # Create a timer to update the date, time, and news headline every minute
+        # Create a timer to update the date, time, and news headline every 15 seconds
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_display)
-        self.timer.start(60000)
+        self.timer.start(15000)
 
         self.update_display()
 
@@ -43,7 +54,7 @@ class NewsDisplayWindow(QMainWindow):
             data = response.json()
             articles = data['articles']
             if len(articles) > 0:
-                headline = articles[0]['title']
+                headline = articles[self.timer.remainingTime() // 15000 % len(articles)]['title']
                 self.news_label.setText(headline)
 
     def resizeEvent(self, event):
@@ -53,8 +64,13 @@ class NewsDisplayWindow(QMainWindow):
         self.datetime_label.setGeometry(0, 0, width, height/2)
         self.news_label.setGeometry(0, height/2, width, height/2)
 
+    def keyPressEvent(self, event):
+        # Close the application when the 'q' key is pressed
+        if event.key() == Qt.Key_Q:
+            self.close()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = NewsDisplayWindow()
-    window.show()
+    window.showFullScreen()
     sys.exit(app.exec_())
